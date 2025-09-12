@@ -72,7 +72,10 @@ async def load_argo_index():
                         
                         # Handle cases where JULD might be a datetime object already
                         juld_val = ds.JULD.values[0]
-                        date = pd.to_datetime(juld_val)
+                        if np.issubdtype(ds.JULD.dtype, np.datetime64):
+                             date = pd.to_datetime(juld_val)
+                        else: # Otherwise, it's a Julian day relative to 1950
+                             date = pd.to_datetime(juld_val, origin='1950-01-01', unit='D')
                         
                         wmo_id = str(ds.PLATFORM_NUMBER.values.astype(str)[0].strip())
                         
@@ -108,8 +111,8 @@ def clean_profile_data(pressure_raw, values_raw):
     Removes non-compliant JSON values (NaN, infinity) from profile data.
     """
     # Flatten the arrays in case they are multidimensional
-    pressure = np.array(pressure_raw).flatten()
-    values = np.array(values_raw).flatten()
+    pressure = np.array(pressure_raw, dtype=float).flatten()
+    values = np.array(values_raw, dtype=float).flatten()
     
     # Create a mask for valid, finite numbers in both arrays
     valid_mask = np.isfinite(values) & np.isfinite(pressure)
@@ -138,9 +141,9 @@ async def process_query_realtime(query: str, argo_df: pd.DataFrame):
         ("human", """Analyze the user query below to determine the user's intent based on the sample data context.
 - **Intent Detection is Critical**: First, determine if the user wants a visual (graph/map) or a text answer.
 - If the user explicitly asks for a 'map', 'locations', or 'positions', set 'visualization_type' to 'plot_map'.
-- If the user asks to 'plot', 'graph', 'chart', or 'show a graph' of a variable (like temperature or salinity), set 'visualization_type' to 'plot_profile'. If they ask for a 'bar' or 'pie' chart, use 'bar' or 'pie'.
+- If the user asks to 'plot', 'graph', 'chart', or 'show a graph' of a variable (like temperature or salinity), set 'visualization_type' to 'plot_profile'. If they ask for a 'bar chart', use 'bar'. If they ask for a 'pie chart', use 'pie'.
 - For ALL other questions asking for information (e.g., 'what is the temperature?', 'tell me the salinity', 'how many floats are there?', 'temperature for 13857'), you MUST set 'visualization_type' to 'text_only'.
-- For simple greetings (e.g., 'hi', 'hello'), provide a friendly 'text_response' and set 'visualization_type' to 'text_only'.
+- For simple greetings (e.g., 'hi', 'hello'), provide a friendly 'text_response' and set 'visualization_type' to 'text_only', leaving other fields empty.
 
 - **Data Extraction is Key**:
 - If the query contains a specific float ID (e.g., a number like '13857' or '1901345'), extract that ID and place it in the 'wmo_ids' list. This is the most important rule.
@@ -169,7 +172,7 @@ Now, provide the structured JSON response.""")
         }
     
     # 4. Invoke the chain with the query and data context
-    data_context = argo_df.head().to_string()
+    data_context = argo_df.to_string()
     try:
         response_json = await chain.ainvoke({
             "query": query, "data_context": data_context, "format_instructions": parser.get_format_instructions()
@@ -189,9 +192,7 @@ Now, provide the structured JSON response.""")
     data_dir = "data"
     
     additional_text = ""
-    
-    # --- FIX ---
-    # Removed the slice to process ALL floats identified by the AI.
+
     for wmo_id in wmo_ids_to_fetch:
         try:
             wmo_id_str = str(wmo_id)
@@ -238,12 +239,20 @@ Now, provide the structured JSON response.""")
             print(f"Could not fetch or process profile for {wmo_id}: {e}")
 
     final_text_response = (response_json.get('text_response') or "") + additional_text
+
+    data_files_loaded = len([f for f in os.listdir(data_dir) if f.endswith(".nc")])
+    fleet_status = {
+        "total_floats": argo_df['wmo_id'].nunique(),  # unique floats = active floats
+        "files_loaded": data_files_loaded
+    }
+
             
     # 6. Return the final structured response for the frontend
     return {
         "text_response": final_text_response,
         "map_data": map_data,
         "profile_data": profile_data,
-        "visualization_type": viz_type
+        "visualization_type": viz_type,
+        "fleet_status": fleet_status
     }
 

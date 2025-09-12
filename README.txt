@@ -1,102 +1,86 @@
 🌊 FloatChat - AI Conversational Interface for ARGO Data
-FloatChat is a web-based, AI-powered conversational interface designed to make exploring complex ARGO oceanographic data simple and intuitive. Users can ask questions in natural language (e.g., "show temperature profiles for floats in the Indian Ocean") and receive interactive maps and graphs in response.
+This project is the MVP implementation of FloatChat, an AI-powered conversational interface designed to democratize access to complex ARGO oceanographic data. It allows users to query oceanographic data using natural language and receive answers in the form of text, interactive maps, and various charts.
 
-This application fetches data in real-time and uses a powerful Large Language Model from Perplexity AI to understand user queries, eliminating the need for technical expertise in data analysis.
+This version uses Google's Gemini AI for natural language understanding and loads data directly from local .nc (NetCDF) files.
 
 ✨ Features
-Natural Language Queries: Ask complex questions in plain English.
+Conversational AI: Ask questions in plain English (e.g., "show me the temperature for float 13857").
 
-AI-Powered: Utilizes Perplexity AI (llama-3-sonar-large-32k-online) for state-of-the-art language understanding.
+Local Data Processing: Reads ARGO .nc files directly from your computer for fast and offline access.
 
-Real-Time Data: Fetches the latest ARGO float index and profile data directly from the official repository.
+Intelligent Visualization: The AI determines the best way to display your data.
 
-Interactive Visualizations: Generates dynamic world maps and depth-profile graphs using Plotly.js.
+Text-Based Answers: For direct questions like "what is the average salinity?".
 
-No API Key Needed (Optional): Can be configured to run in a rule-based mode without an AI provider.
+Interactive Maps: For location-based queries like "where are the floats?".
 
-Lightweight Frontend: Built with standard HTML, CSS, and JavaScript for maximum compatibility and speed.
+Profile Plots: For depth-based data like "plot temperature vs pressure".
 
-Efficient Backend: Uses FastAPI with an intelligent caching mechanism to ensure fast response times after the initial data load.
+Time-Series Graphs: For time-based queries like "show temperature over time for float 13857".
 
-🛠️ Tech Stack
-Backend:
+Toggleable Views: Switch between different visualizations (Map, Profile Plot, Time-Series) for the same query result.
 
-Python
+🛠️ Tech Stack & Setup
+Backend
+Language: Python 3.9+
 
-FastAPI (for the web server)
+Framework: FastAPI
 
-LangChain (for interacting with the AI model)
+AI/ML: LangChain, Google Gemini
 
-Perplexity AI (as the language model provider)
+Data Libraries: Pandas, Xarray, NetCDF4
 
-Pandas & Xarray (for data manipulation)
+Frontend
+Technology: HTML, CSS, JavaScript
 
-Frontend:
+Visualization: Plotly.js
 
-HTML5
+Setup Steps
+Clone the Repository & Set Up Folders:
 
-CSS3
+Create a main project folder (e.g., FloatChat_WebApp).
 
-Vanilla JavaScript
+Inside it, create two folders: backend and frontend.
 
-Plotly.js (for charting)
+Inside backend, create an empty folder named data.
 
-🚀 Getting Started
-Follow these instructions to set up and run the FloatChat application on your local machine.
+Place Your Data:
 
-1. Prerequisites
-Python 3.9+
+Copy all of your ARGO .nc files into the backend/data/ folder.
 
-Perplexity AI API Key (Required for the AI-powered version)
+Backend Dependencies & API Key:
 
-Sign up and generate a key at Perplexity Labs.
+Open a terminal in the backend directory.
 
-2. Backend Setup
-Clone the Repository:
+Create a file named .env and add your Google API key:
 
-git clone <your-repository-url>
-cd <repository-folder>/backend
+GOOGLE_API_KEY="Your-Google-AI-Studio-API-Key"
 
-Create an Environment File:
+Install the required Python packages:
 
-In the backend directory, create a file named .env.
+pip install "fastapi[all]" uvicorn python-dotenv httpx xarray netcdf4 h5netcdf langchain langchain-google-genai
 
-Add your Perplexity API key to this file:
+Frontend Setup:
 
-PERPLEXITY_API_KEY="pplx-YourSecretAPIKeyHere"
+Save the index.html file into the frontend folder.
 
-Install Python Dependencies:
+Run the Application:
 
-pip install "fastapi[all]" uvicorn python-dotenv httpx pandas xarray netcdf4 h5netcdf langchain langchain-perplexity
-
-Run the Backend Server:
+Terminal 1 (Backend): Navigate to the backend folder and run the server.
 
 uvicorn main:app --reload
 
-The backend will start, download the ARGO index file (this might take a minute on the first run), and then be ready at http://localhost:8000. Keep this terminal running.
+The server will start, scan your data folder, and become ready at http://localhost:8000.
 
-3. Frontend Setup
-Save the Frontend File:
-
-Navigate to the frontend directory.
-
-Ensure you have the index.html file saved there.
-
-Open in Browser:
-
-Simply open the index.html file directly in your web browser (e.g., by right-clicking and selecting "Open with Chrome").
-
-The application is now running! You can start typing queries into the chat interface.
+Terminal 2 (Frontend): You don't need a separate server. Simply open the frontend/index.html file in your web browser.
 
 💬 Example Queries
-Here are some examples of what you can ask FloatChat:
+Simple Greeting: hello
 
-hi
+Text-Based Query: what is the average temperature for float 13857?
 
-locate 5 floats position
+Map Query: show me the locations of all floats
 
-show me floats in the indian ocean
+Profile Plot Query: plot the salinity profile for float 13857
 
-show temperature and salinity for float 1901345
-
-can you find the position of floats in the atlantic?
+Time-Series Query: show the temperature history for float 13857 over time

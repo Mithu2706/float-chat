@@ -3,264 +3,355 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌊 FloatChat AI</title>
-    <!-- Plotly.js for visualizations -->
-    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <title>FloatChat AI</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Plotly.js for charting -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-      /* --- Global Styles & Variables --- */
       :root {
-        --primary-color: #007bff;
-        --background-color: #f0f2f5;
-        --chat-window-bg: #ffffff;
-        --user-bubble-bg: #007bff;
-        --user-bubble-text: #ffffff;
-        --bot-bubble-bg: #e4e6eb;
-        --bot-bubble-text: #050505;
-        --header-bg: #ffffff;
-        --border-color: #ced4da;
-        --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-          "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-          "Helvetica Neue", sans-serif;
+        --primary-bg: #f0f4f8;
+        --secondary-bg: #ffffff;
+        --accent-color: #0066ff;
+        --text-color: #333;
+        --light-text-color: #777;
+        --border-color: #e0e0e0;
+        --shadow-color: rgba(0, 0, 0, 0.05);
+        --bot-message-bg: #e9f2ff;
+        --user-message-bg: #0066ff;
+        --user-message-text: #ffffff;
       }
-
       body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
         margin: 0;
-        font-family: var(--font-family);
-        background-color: var(--background-color);
-        color: var(--bot-bubble-text);
+        background-color: var(--primary-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: var(--text-color);
+        font-family: "Inter", sans-serif;
       }
-
-      /* --- Main App Layout --- */
-      .app-container {
+      .container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 850px;
+        background: var(--secondary-bg);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px var(--shadow-color);
+        overflow: hidden;
+      }
+      .sidebar {
+        width: 50%;
         display: flex;
         flex-direction: column;
-        height: 100vh;
-        max-width: 100%;
-        margin: 0 auto;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        background: var(--chat-window-bg);
+        border-left: 1px solid var(--border-color);
       }
-
-      .app-header {
-        padding: 1rem;
-        background: var(--header-bg);
+      .main-content {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow: hidden;
+      }
+      .chat-header {
+        padding: 20px;
         border-bottom: 1px solid var(--border-color);
-        text-align: center;
-        flex-shrink: 0;
+        display: flex;
+        align-items: center;
       }
-
-      .app-header h1 {
+      .chat-header h1 {
+        font-size: 20px;
         margin: 0;
-        font-size: 1.5rem;
-        color: var(--primary-color);
+        margin-left: 10px;
       }
-
-      .app-header p {
-        margin: 0.25rem 0 0;
-        color: #6c757d;
-      }
-
       .chat-window {
         flex-grow: 1;
         overflow-y: auto;
-        padding: 1rem;
-      }
-
-      .message-list {
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
       }
-
-      /* --- Message Bubbles --- */
-      .message-bubble {
+      .message {
         max-width: 80%;
-        padding: 0.75rem 1rem;
-        border-radius: 1.25rem;
+        padding: 12px 18px;
+        border-radius: 20px;
+        margin-bottom: 10px;
+        line-height: 1.5;
         word-wrap: break-word;
       }
-
-      .message-bubble.user {
-        background-color: var(--user-bubble-bg);
-        color: var(--user-bubble-text);
+      .user-message {
+        background-color: var(--accent-color);
+        color: var(--user-message-text);
         align-self: flex-end;
-        border-bottom-right-radius: 0.5rem;
+        border-bottom-right-radius: 4px;
       }
-
-      .message-bubble.bot {
-        background-color: var(--bot-bubble-bg);
-        color: var(--bot-bubble-text);
+      .bot-message {
+        background-color: var(--bot-message-bg);
+        color: var(--text-color);
         align-self: flex-start;
-        border-bottom-left-radius: 0.5rem;
+        border-bottom-left-radius: 4px;
       }
-
-      .message-text {
-        white-space: pre-wrap;
-      }
-
-      /* --- Input Area --- */
       .input-area {
-        padding: 1rem;
-        border-top: 1px solid var(--border-color);
-        background: var(--header-bg);
-        flex-shrink: 0;
-      }
-
-      .input-form {
         display: flex;
-        gap: 0.5rem;
+        padding: 20px;
+        border-top: 1px solid var(--border-color);
       }
-
-      .input-form input {
+      input[type="text"] {
         flex-grow: 1;
-        padding: 0.75rem;
+        padding: 12px;
         border: 1px solid var(--border-color);
-        border-radius: 1.5rem;
-        font-size: 1rem;
-      }
-
-      .input-form input:focus {
+        border-radius: 24px;
+        font-size: 16px;
         outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        transition: border-color 0.3s;
       }
-
-      .input-form button {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 1.5rem;
-        background-color: var(--primary-color);
+      input[type="text"]:focus {
+        border-color: var(--accent-color);
+      }
+      button {
+        background-color: var(--accent-color);
         color: white;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-
-      .input-form button:hover {
-        background-color: #0056b3;
-      }
-
-      .input-form button:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
-      }
-
-      /* --- Visualizations --- */
-      .visualization-container {
-        margin-top: 1rem;
-        background: #fff;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
-      }
-
-      .viz-tabs {
-        border-top: 1px solid var(--border-color);
-      }
-
-      .viz-tabs .tab-buttons {
-        display: flex;
-        background-color: #f8f9fa;
-      }
-
-      .viz-tabs button {
-        flex: 1;
-        padding: 0.75rem;
         border: none;
-        background: none;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #495057;
-        transition: background-color 0.2s, color 0.2s;
-        border-bottom: 2px solid transparent;
-      }
-
-      .viz-tabs button.active {
-        color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-      }
-
-      .plotly-chart {
-        width: 100%;
-        min-height: 400px;
-      }
-
-      /* --- Loading Indicator --- */
-      .typing-indicator {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem;
-      }
-
-      .typing-indicator span {
-        height: 10px;
-        width: 10px;
-        background-color: #90949c;
         border-radius: 50%;
-        display: inline-block;
-        margin: 0 2px;
-        animation: bounce 1.4s infinite ease-in-out both;
+        width: 48px;
+        height: 48px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #0052cc;
       }
 
-      .typing-indicator span:nth-of-type(1) {
-        animation-delay: -0.32s;
+      /* --- Fleet Status Section --- */
+      .fleet-status {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 15px;
       }
-      .typing-indicator span:nth-of-type(2) {
-        animation-delay: -0.16s;
+      .status-card {
+        flex: 1;
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 6px var(--shadow-color);
+        padding: 12px;
+        text-align: center;
+      }
+      .status-card h3 {
+        margin: 0;
+        font-size: 14px;
+        color: var(--light-text-color);
+      }
+      .status-card p {
+        margin: 5px 0 0;
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--text-color);
       }
 
-      @keyframes bounce {
-        0%,
-        80%,
+      .visualization-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 10px;
+        min-height: 0;
+      }
+
+      .chart-section {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 10px;
+        min-height: 0;
+      }
+
+      #plot-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: var(--accent-color);
+        animation: spin 1s ease infinite;
+        display: none;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
         100% {
-          transform: scale(0);
+          transform: rotate(360deg);
         }
-        40% {
-          transform: scale(1);
-        }
+      }
+
+      .toggle-buttons {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+      }
+      .toggle-buttons button {
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+      .toggle-buttons button.active,
+      .toggle-buttons button:hover {
+        background-color: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+      }
+      .plot-placeholder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        color: var(--light-text-color);
+        text-align: center;
       }
     </style>
   </head>
   <body>
-    <div class="app-container">
-      <header class="app-header">
-        <h1>FloatChat AI</h1>
-        <p>Your conversational guide to real-time ARGO ocean data.</p>
-      </header>
-      <div class="chat-window" id="chat-window">
-        <div class="message-list" id="message-list">
-          <!-- Messages will be added here dynamically -->
+    <div class="container">
+      <!-- Visualization Area -->
+      <div class="main-content">
+        <div class="info-panel">
+          <h2>Data Visualization</h2>
+          <p>
+            Fleet status and charts based on your conversation will appear here.
+          </p>
+        </div>
+
+        <div class="visualization-area">
+          <!-- Fleet Status Section -->
+          <div class="fleet-status" id="fleet-status">
+            <div class="status-card">
+              <h3>Active Floats</h3>
+              <p id="active-floats-value">--</p>
+            </div>
+            <div class="status-card">
+              <h3>Files Loaded</h3>
+              <p id="oceans-value">--</p>
+            </div>
+            <div class="status-card">
+              <h3>Last Update</h3>
+              <p id="last-updated-value">--</p>
+            </div>
+          </div>
+
+          <!-- Toggle Buttons for Map/Profile -->
+          <div class="toggle-buttons" id="toggle-buttons" style="display: none">
+            <button id="btn-map" onclick="toggleView('map')">Map</button>
+            <button id="btn-profile" onclick="toggleView('profile')">
+              Profile
+            </button>
+          </div>
+
+          <!-- Chart Section -->
+          <div class="chart-section">
+            <div class="spinner" id="spinner"></div>
+            <div id="plot-container">
+              <div class="plot-placeholder">
+                <p>
+                  Your visualizations will appear here.<br />Try asking: "Show a
+                  map of all floats".
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="input-area">
-        <form id="input-form" class="input-form">
+
+      <!-- Chat Area -->
+      <div class="sidebar">
+        <div class="chat-header">
+          <span class="chat-icon"><i class="bi bi-robot"></i> </span>
+          <h1>FloatChat AI</h1>
+        </div>
+        <div class="chat-window" id="chat-window"></div>
+        <div class="input-area">
           <input
             type="text"
-            id="input-field"
-            placeholder="Ask about floats..."
-            autocomplete="off"
+            id="userInput"
+            placeholder="Ask about ARGO float data..."
+            onkeydown="if (event.key === 'Enter') sendMessage()"
           />
-          <button type="submit" id="submit-button">Send</button>
-        </form>
+          <button id="sendButton" onclick="sendMessage()">➤</button>
+        </div>
       </div>
     </div>
 
     <script>
-      const form = document.getElementById("input-form");
-      const inputField = document.getElementById("input-field");
-      const submitButton = document.getElementById("submit-button");
-      const messageList = document.getElementById("message-list");
+      const userInput = document.getElementById("userInput");
+      const sendButton = document.getElementById("sendButton");
       const chatWindow = document.getElementById("chat-window");
+      const plotContainer = document.getElementById("plot-container");
+      const spinner = document.getElementById("spinner");
+      const toggleButtons = document.getElementById("toggle-buttons");
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const query = inputField.value.trim();
+      let lastApiResponse = null;
+
+      window.onload = () => {
+        appendMessage(
+          "assistant",
+          "Welcome to FloatChat AI! I can help you explore local ARGO float data. Try asking me about temperature, salinity, or float locations."
+        );
+      };
+
+      function appendMessage(sender, text) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add(
+          "message",
+          sender === "user" ? "user-message" : "bot-message"
+        );
+        messageDiv.innerHTML = text.replace(/\n/g, "<br>");
+        chatWindow.appendChild(messageDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const query = userInput.value.trim();
         if (!query) return;
 
-        addMessage(query, "user");
-        inputField.value = "";
-        setLoading(true);
+        appendMessage("user", query);
+        userInput.value = "";
+        spinner.style.display = "block";
+        plotContainer.innerHTML = "";
+        toggleButtons.style.display = "none";
 
         try {
           const response = await fetch("http://localhost:8000/query", {
@@ -269,176 +360,163 @@
             body: JSON.stringify({ query: query }),
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
 
-          const data = await response.json();
-          addMessage(data, "bot");
+          lastApiResponse = await response.json();
+
+          appendMessage("assistant", lastApiResponse.text_response);
+          handleVisualization(lastApiResponse);
         } catch (error) {
-          console.error("Failed to fetch from backend:", error);
-          const errorMessage = {
-            text_response:
-              "Sorry, I couldn't connect to the server. Please ensure the backend is running and try again.",
-          };
-          addMessage(errorMessage, "bot");
+          console.error("Error fetching data:", error);
+          appendMessage("assistant", "Sorry, I encountered an error.");
         } finally {
-          setLoading(false);
+          spinner.style.display = "none";
         }
-      });
+      }
 
-      function setLoading(isLoading) {
-        inputField.disabled = isLoading;
-        submitButton.disabled = isLoading;
-        const existingIndicator = document.getElementById("loading-indicator");
-        if (isLoading) {
-          if (!existingIndicator) {
-            const typingIndicator = document.createElement("div");
-            typingIndicator.id = "loading-indicator";
-            typingIndicator.className = "message-bubble bot typing-indicator";
-            typingIndicator.innerHTML =
-              "<span></span><span></span><span></span>";
-            messageList.appendChild(typingIndicator);
-            scrollToBottom();
-          }
+      function handleVisualization(data) {
+        // ✅ Update Fleet Status Section
+        if (data.fleet_status) {
+          document.getElementById("active-floats-value").textContent =
+            data.fleet_status.total_floats ?? "--";
+          document.getElementById("oceans-value").textContent =
+            data.fleet_status.files_loaded ?? "--";
+          document.getElementById("last-updated-value").textContent =
+            new Date().toLocaleString();
+        }
+
+        const { map_data, profile_data, visualization_type } = data;
+        const hasMapData =
+          map_data && map_data.wmo_ids && map_data.wmo_ids.length > 0;
+        const hasProfileData =
+          profile_data && Object.keys(profile_data).length > 0;
+
+        document.getElementById("btn-map").style.display = hasMapData
+          ? "inline-block"
+          : "none";
+        document.getElementById("btn-profile").style.display = hasProfileData
+          ? "inline-block"
+          : "none";
+
+        if (hasMapData || hasProfileData) {
+          toggleButtons.style.display = "flex";
         } else {
-          if (existingIndicator) {
-            existingIndicator.remove();
+          toggleButtons.style.display = "none";
+          plotContainer.innerHTML =
+            '<div class="plot-placeholder"><p>No visualization data to display.</p></div>';
+          return;
+        }
+
+        document
+          .querySelectorAll(".toggle-buttons button")
+          .forEach((btn) => btn.classList.remove("active"));
+        if (visualization_type === "plot_map" && hasMapData) {
+          document.getElementById("btn-map").classList.add("active");
+          drawMap(map_data);
+        } else if (visualization_type === "plot_profile" && hasProfileData) {
+          document.getElementById("btn-profile").classList.add("active");
+          drawProfileChart(profile_data);
+        } else {
+          if (hasMapData) {
+            document.getElementById("btn-map").classList.add("active");
+            drawMap(map_data);
+          } else if (hasProfileData) {
+            document.getElementById("btn-profile").classList.add("active");
+            drawProfileChart(profile_data);
           }
         }
       }
 
-      function addMessage(data, role) {
-        const messageBubble = document.createElement("div");
-        messageBubble.className = `message-bubble ${role}`;
-
-        const messageText = document.createElement("div");
-        messageText.className = "message-text";
-        messageText.textContent = role === "user" ? data : data.text_response;
-        messageBubble.appendChild(messageText);
-
-        if (role === "bot") {
-          renderVisualizations(messageBubble, data);
+      function toggleView(viewType) {
+        if (!lastApiResponse) return;
+        document
+          .querySelectorAll(".toggle-buttons button")
+          .forEach((btn) => btn.classList.remove("active"));
+        if (viewType === "map") {
+          document.getElementById("btn-map").classList.add("active");
+          drawMap(lastApiResponse.map_data);
+        } else if (viewType === "profile") {
+          document.getElementById("btn-profile").classList.add("active");
+          drawProfileChart(lastApiResponse.profile_data);
         }
-
-        messageList.appendChild(messageBubble);
-        scrollToBottom();
       }
 
-      function renderVisualizations(bubble, data) {
-        const hasMap = data.map_data && data.map_data.lat.length > 0;
-        const hasProfile =
-          data.profile_data &&
-          (data.profile_data.temp || data.profile_data.sal);
-
-        if (!hasMap && !hasProfile) return;
-
-        const vizContainer = document.createElement("div");
-        vizContainer.className = "visualization-container";
-
-        // Map Plot
-        if (hasMap) {
-          const mapDiv = document.createElement("div");
-          mapDiv.className = "plotly-chart";
-          vizContainer.appendChild(mapDiv);
-
-          Plotly.newPlot(
-            mapDiv,
-            [
-              {
-                type: "scattergeo",
-                lat: data.map_data.lat,
-                lon: data.map_data.lon,
-                text: data.map_data.wmo_ids,
-                mode: "markers",
-              },
-            ],
-            {
-              title: "ARGO Float Locations",
-              geo: { projection: { type: "natural earth" } },
-              margin: { l: 0, r: 0, t: 40, b: 0 },
+      function drawMap(mapData) {
+        if (!mapData || !mapData.wmo_ids || mapData.wmo_ids.length === 0) {
+          plotContainer.innerHTML =
+            '<div class="plot-placeholder"><p>No location data available.</p></div>';
+          return;
+        }
+        plotContainer.innerHTML = "";
+        const data = [
+          {
+            type: "scattergeo",
+            lon: mapData.lon,
+            lat: mapData.lat,
+            text: mapData.wmo_ids.map((id) => `Float ID: ${id}`),
+            mode: "markers",
+            marker: {
+              size: 8,
+              color: "#0066ff",
+              line: { width: 1, color: "#ffffff" },
             },
-            { responsive: true }
-          );
-        }
-
-        // Profile Plots with Tabs
-        if (hasProfile) {
-          const tabsDiv = document.createElement("div");
-          tabsDiv.className = "viz-tabs";
-
-          const buttonsDiv = document.createElement("div");
-          buttonsDiv.className = "tab-buttons";
-
-          const contentDiv = document.createElement("div");
-          contentDiv.className = "tab-content";
-
-          const profileDiv = document.createElement("div");
-          profileDiv.className = "plotly-chart";
-          contentDiv.appendChild(profileDiv);
-
-          tabsDiv.appendChild(buttonsDiv);
-          tabsDiv.appendChild(contentDiv);
-          vizContainer.appendChild(tabsDiv);
-
-          const createTab = (variable, label) => {
-            const button = document.createElement("button");
-            button.textContent = label;
-            button.onclick = () => {
-              // Update active class
-              Array.from(buttonsDiv.children).forEach((btn) =>
-                btn.classList.remove("active")
-              );
-              button.classList.add("active");
-
-              // Re-plot data
-              Plotly.newPlot(
-                profileDiv,
-                [
-                  {
-                    x: variable.values,
-                    y: variable.pressure,
-                    type: "scatter",
-                    mode: "lines",
-                  },
-                ],
-                {
-                  title: `${label} Profile`,
-                  xaxis: {
-                    title: label.includes("Temp")
-                      ? "Temperature (°C)"
-                      : "Salinity (PSU)",
-                  },
-                  yaxis: {
-                    title: "Pressure (dbar) ≈ Depth",
-                    autorange: "reversed",
-                  },
-                },
-                { responsive: true }
-              );
-            };
-            buttonsDiv.appendChild(button);
-            return button;
-          };
-
-          let firstTabButton = null;
-          if (data.profile_data.temp)
-            firstTabButton = createTab(data.profile_data.temp, "Temperature");
-          if (data.profile_data.sal) {
-            const salButton = createTab(data.profile_data.sal, "Salinity");
-            if (!firstTabButton) firstTabButton = salButton;
-          }
-
-          // Activate the first tab by default
-          if (firstTabButton) {
-            firstTabButton.click();
-          }
-        }
-        bubble.appendChild(vizContainer);
+          },
+        ];
+        const layout = {
+          title: "ARGO Float Locations",
+          geo: {
+            projection: { type: "natural earth" },
+            showland: true,
+            landcolor: "#e0e0e0",
+          },
+          margin: { l: 0, r: 0, t: 40, b: 0 },
+        };
+        Plotly.newPlot("plot-container", data, layout, { responsive: true });
       }
 
-      function scrollToBottom() {
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+      function drawProfileChart(profileData) {
+        if (!profileData || Object.keys(profileData).length === 0) {
+          plotContainer.innerHTML =
+            '<div class="plot-placeholder"><p>No profile data available.</p></div>';
+          return;
+        }
+        plotContainer.innerHTML = "";
+        const traces = [];
+        let yAxisTitle = "Pressure (dbar) ≈ Depth (m)";
+        let xAxisTitle = "";
+
+        for (const [wmo_id, data] of Object.entries(profileData)) {
+          if (data.temp) {
+            xAxisTitle = "Temperature (°C)";
+            traces.push({
+              x: data.temp.values,
+              y: data.temp.pressure,
+              mode: "lines+markers",
+              type: "scatter",
+              name: `Temp ${wmo_id}`,
+            });
+          }
+          if (data.sal) {
+            xAxisTitle = "Salinity (PSU)";
+            traces.push({
+              x: data.sal.values,
+              y: data.sal.pressure,
+              mode: "lines+markers",
+              type: "scatter",
+              name: `Salinity ${wmo_id}`,
+            });
+          }
+        }
+
+        const layout = {
+          title: "ARGO Float Profile",
+          xaxis: { title: xAxisTitle },
+          yaxis: { title: yAxisTitle, autorange: "reversed" },
+          margin: { l: 60, r: 20, t: 40, b: 50 },
+          showlegend: true,
+        };
+        Plotly.newPlot("plot-container", traces, layout, { responsive: true });
       }
     </script>
   </body>
