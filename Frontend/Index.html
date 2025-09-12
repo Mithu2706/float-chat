@@ -35,7 +35,7 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
-        max-width: 800px;
+        max-width: 100%;
         margin: 0 auto;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
         background: var(--chat-window-bg);
@@ -225,7 +225,7 @@
   <body>
     <div class="app-container">
       <header class="app-header">
-        <h1>🌊 FloatChat AI</h1>
+        <h1>FloatChat AI</h1>
         <p>Your conversational guide to real-time ARGO ocean data.</p>
       </header>
       <div class="chat-window" id="chat-window">
@@ -238,7 +238,7 @@
           <input
             type="text"
             id="input-field"
-            placeholder="Ask about floats near the Indian Ocean..."
+            placeholder="Ask about floats..."
             autocomplete="off"
           />
           <button type="submit" id="submit-button">Send</button>
