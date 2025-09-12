@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌊 FloatChat AI</title>
+    <!-- Plotly.js for visualizations -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+      /* --- Global Styles & Variables --- */
+      :root {
+        --primary-color: #007bff;
+        --background-color: #f0f2f5;
+        --chat-window-bg: #ffffff;
+        --user-bubble-bg: #007bff;
+        --user-bubble-text: #ffffff;
+        --bot-bubble-bg: #e4e6eb;
+        --bot-bubble-text: #050505;
+        --header-bg: #ffffff;
+        --border-color: #ced4da;
+        --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+          "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+          "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-family);
+        background-color: var(--background-color);
+        color: var(--bot-bubble-text);
+      }
+
+      /* --- Main App Layout --- */
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        background: var(--chat-window-bg);
+      }
+
+      .app-header {
+        padding: 1rem;
+        background: var(--header-bg);
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .app-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--primary-color);
+      }
+
+      .app-header p {
+        margin: 0.25rem 0 0;
+        color: #6c757d;
+      }
+
+      .chat-window {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1rem;
+      }
+
+      .message-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      /* --- Message Bubbles --- */
+      .message-bubble {
+        max-width: 80%;
+        padding: 0.75rem 1rem;
+        border-radius: 1.25rem;
+        word-wrap: break-word;
+      }
+
+      .message-bubble.user {
+        background-color: var(--user-bubble-bg);
+        color: var(--user-bubble-text);
+        align-self: flex-end;
+        border-bottom-right-radius: 0.5rem;
+      }
+
+      .message-bubble.bot {
+        background-color: var(--bot-bubble-bg);
+        color: var(--bot-bubble-text);
+        align-self: flex-start;
+        border-bottom-left-radius: 0.5rem;
+      }
+
+      .message-text {
+        white-space: pre-wrap;
+      }
+
+      /* --- Input Area --- */
+      .input-area {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--header-bg);
+        flex-shrink: 0;
+      }
+
+      .input-form {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .input-form input {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 1.5rem;
+        font-size: 1rem;
+      }
+
+      .input-form input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+
+      .input-form button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .input-form button:hover {
+        background-color: #0056b3;
+      }
+
+      .input-form button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      /* --- Visualizations --- */
+      .visualization-container {
+        margin-top: 1rem;
+        background: #fff;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+      }
+
+      .viz-tabs {
+        border-top: 1px solid var(--border-color);
+      }
+
+      .viz-tabs .tab-buttons {
+        display: flex;
+        background-color: #f8f9fa;
+      }
+
+      .viz-tabs button {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #495057;
+        transition: background-color 0.2s, color 0.2s;
+        border-bottom: 2px solid transparent;
+      }
+
+      .viz-tabs button.active {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+      }
+
+      .plotly-chart {
+        width: 100%;
+        min-height: 400px;
+      }
+
+      /* --- Loading Indicator --- */
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+      }
+
+      .typing-indicator span {
+        height: 10px;
+        width: 10px;
+        background-color: #90949c;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        animation: bounce 1.4s infinite ease-in-out both;
+      }
+
+      .typing-indicator span:nth-of-type(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-indicator span:nth-of-type(2) {
+        animation-delay: -0.16s;
+      }
+
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <h1>🌊 FloatChat AI</h1>
+        <p>Your conversational guide to real-time ARGO ocean data.</p>
+      </header>
+      <div class="chat-window" id="chat-window">
+        <div class="message-list" id="message-list">
+          <!-- Messages will be added here dynamically -->
+        </div>
+      </div>
+      <div class="input-area">
+        <form id="input-form" class="input-form">
+          <input
+            type="text"
+            id="input-field"
+            placeholder="Ask about floats near the Indian Ocean..."
+            autocomplete="off"
+          />
+          <button type="submit" id="submit-button">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("input-form");
+      const inputField = document.getElementById("input-field");
+      const submitButton = document.getElementById("submit-button");
+      const messageList = document.getElementById("message-list");
+      const chatWindow = document.getElementById("chat-window");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const query = inputField.value.trim();
+        if (!query) return;
+
+        addMessage(query, "user");
+        inputField.value = "";
+        setLoading(true);
+
+        try {
+          const response = await fetch("http://localhost:8000/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: query }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          addMessage(data, "bot");
+        } catch (error) {
+          console.error("Failed to fetch from backend:", error);
+          const errorMessage = {
+            text_response:
+              "Sorry, I couldn't connect to the server. Please ensure the backend is running and try again.",
+          };
+          addMessage(errorMessage, "bot");
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      function setLoading(isLoading) {
+        inputField.disabled = isLoading;
+        submitButton.disabled = isLoading;
+        const existingIndicator = document.getElementById("loading-indicator");
+        if (isLoading) {
+          if (!existingIndicator) {
+            const typingIndicator = document.createElement("div");
+            typingIndicator.id = "loading-indicator";
+            typingIndicator.className = "message-bubble bot typing-indicator";
+            typingIndicator.innerHTML =
+              "<span></span><span></span><span></span>";
+            messageList.appendChild(typingIndicator);
+            scrollToBottom();
+          }
+        } else {
+          if (existingIndicator) {
+            existingIndicator.remove();
+          }
+        }
+      }
+
+      function addMessage(data, role) {
+        const messageBubble = document.createElement("div");
+        messageBubble.className = `message-bubble ${role}`;
+
+        const messageText = document.createElement("div");
+        messageText.className = "message-text";
+        messageText.textContent = role === "user" ? data : data.text_response;
+        messageBubble.appendChild(messageText);
+
+        if (role === "bot") {
+          renderVisualizations(messageBubble, data);
+        }
+
+        messageList.appendChild(messageBubble);
+        scrollToBottom();
+      }
+
+      function renderVisualizations(bubble, data) {
+        const hasMap = data.map_data && data.map_data.lat.length > 0;
+        const hasProfile =
+          data.profile_data &&
+          (data.profile_data.temp || data.profile_data.sal);
+
+        if (!hasMap && !hasProfile) return;
+
+        const vizContainer = document.createElement("div");
+        vizContainer.className = "visualization-container";
+
+        // Map Plot
+        if (hasMap) {
+          const mapDiv = document.createElement("div");
+          mapDiv.className = "plotly-chart";
+          vizContainer.appendChild(mapDiv);
+
+          Plotly.newPlot(
+            mapDiv,
+            [
+              {
+                type: "scattergeo",
+                lat: data.map_data.lat,
+                lon: data.map_data.lon,
+                text: data.map_data.wmo_ids,
+                mode: "markers",
+              },
+            ],
+            {
+              title: "ARGO Float Locations",
+              geo: { projection: { type: "natural earth" } },
+              margin: { l: 0, r: 0, t: 40, b: 0 },
+            },
+            { responsive: true }
+          );
+        }
+
+        // Profile Plots with Tabs
+        if (hasProfile) {
+          const tabsDiv = document.createElement("div");
+          tabsDiv.className = "viz-tabs";
+
+          const buttonsDiv = document.createElement("div");
+          buttonsDiv.className = "tab-buttons";
+
+          const contentDiv = document.createElement("div");
+          contentDiv.className = "tab-content";
+
+          const profileDiv = document.createElement("div");
+          profileDiv.className = "plotly-chart";
+          contentDiv.appendChild(profileDiv);
+
+          tabsDiv.appendChild(buttonsDiv);
+          tabsDiv.appendChild(contentDiv);
+          vizContainer.appendChild(tabsDiv);
+
+          const createTab = (variable, label) => {
+            const button = document.createElement("button");
+            button.textContent = label;
+            button.onclick = () => {
+              // Update active class
+              Array.from(buttonsDiv.children).forEach((btn) =>
+                btn.classList.remove("active")
+              );
+              button.classList.add("active");
+
+              // Re-plot data
+              Plotly.newPlot(
+                profileDiv,
+                [
+                  {
+                    x: variable.values,
+                    y: variable.pressure,
+                    type: "scatter",
+                    mode: "lines",
+                  },
+                ],
+                {
+                  title: `${label} Profile`,
+                  xaxis: {
+                    title: label.includes("Temp")
+                      ? "Temperature (°C)"
+                      : "Salinity (PSU)",
+                  },
+                  yaxis: {
+                    title: "Pressure (dbar) ≈ Depth",
+                    autorange: "reversed",
+                  },
+                },
+                { responsive: true }
+              );
+            };
+            buttonsDiv.appendChild(button);
+            return button;
+          };
+
+          let firstTabButton = null;
+          if (data.profile_data.temp)
+            firstTabButton = createTab(data.profile_data.temp, "Temperature");
+          if (data.profile_data.sal) {
+            const salButton = createTab(data.profile_data.sal, "Salinity");
+            if (!firstTabButton) firstTabButton = salButton;
+          }
+
+          // Activate the first tab by default
+          if (firstTabButton) {
+            firstTabButton.click();
+          }
+        }
+        bubble.appendChild(vizContainer);
+      }
+
+      function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
